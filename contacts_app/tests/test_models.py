@@ -31,3 +31,13 @@ class ContactModelTest(TestCase):
     def test_string_representation(self):
         contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
         self.assertEqual(str(contact), "John Doe")
+
+    def test_create_contact_with_empty_optional_fields(self):
+        contact = Contact.objects.create(name="Empty Fields", mail="empty@example.com")
+        self.assertIsNone(contact.number)
+        self.assertIsNone(contact.first_letters)
+        self.assertIsNone(contact.profile_pic)
+
+    def test_contact_string_representation_with_long_name(self):
+        contact = Contact.objects.create(name="A" * 255, mail="long.name@example.com")
+        self.assertEqual(str(contact), "A" * 255)

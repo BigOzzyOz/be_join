@@ -24,7 +24,7 @@ class Task(models.Model):
     description = models.TextField()
     category = models.CharField(max_length=255, choices=CATEGORY_CHOICES)
     date = models.DateField()
-    prio = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default="low")
+    prio = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default="medium")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="toDo")
     assigned_to = models.ManyToManyField(Contact, related_name="tasks")
 

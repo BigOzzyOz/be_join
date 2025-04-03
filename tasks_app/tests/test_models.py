@@ -47,3 +47,15 @@ class SubtaskModelTest(TestCase):
 
     def test_subtask_string_representation(self):
         self.assertEqual(str(self.subtask), "Test Subtask")
+
+
+class TaskModelEdgeCaseTest(TestCase):
+    def test_create_task_without_description(self):
+        task = Task.objects.create(
+            title="Task Without Description",
+            category="Technical Task",
+            date=datetime.date.today(),
+            prio="low",
+            status="toDo",
+        )
+        self.assertEqual(task.description, "")

@@ -12,7 +12,6 @@ class ContactSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "mail", "number", "first_letters", "profile_pic"]
 
     def validate_mail(self, value):
-        print(f"Validating mail: {value}")
         return value
 
 

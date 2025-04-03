@@ -21,7 +21,6 @@ class TaskSerializerTest(TestCase):
 
     def test_serialize_task(self):
         serializer = TaskSerializer(self.task)
-        print(serializer.data)  # Debugging-Ausgabe
         expected_data = {
             "id": str(self.task.id),
             "title": "Test Task",
@@ -62,6 +61,52 @@ class TaskSerializerTest(TestCase):
         self.assertIn("prio", serializer.errors)
         self.assertIn("status", serializer.errors)
 
+    def test_update_existing_subtask(self):
+        task = Task.objects.create(
+            title="Test Task",
+            description="This is a test task.",
+            category="User Story",
+            date=datetime.date.today(),
+            prio="medium",
+            status="toDo",
+        )
+        subtask = Subtask.objects.create(task=task, text="Old Subtask", status="unchecked")
+
+        data = {
+            "title": "Updated Task",
+            "subtasks": [
+                {"id": str(subtask.id), "text": "Updated Subtask", "status": "checked"},
+            ],
+        }
+        serializer = TaskSerializer(instance=task, data=data, partial=True)
+        self.assertTrue(serializer.is_valid())
+        serializer.save()
+
+        subtask.refresh_from_db()
+        self.assertEqual(subtask.text, "Updated Subtask")
+        self.assertEqual(subtask.status, "checked")
+
+    def test_delete_removed_subtask(self):
+        task = Task.objects.create(
+            title="Test Task",
+            description="This is a test task.",
+            category="User Story",
+            date=datetime.date.today(),
+            prio="medium",
+            status="toDo",
+        )
+        subtask = Subtask.objects.create(task=task, text="Subtask to Delete", status="unchecked")
+
+        data = {
+            "title": "Updated Task",
+            "subtasks": [],  # Keine Subtasks mehr vorhanden
+        }
+        serializer = TaskSerializer(instance=task, data=data, partial=True)
+        self.assertTrue(serializer.is_valid())
+        serializer.save()
+
+        self.assertFalse(Subtask.objects.filter(id=subtask.id).exists())
+
 
 class SubtaskSerializerTest(TestCase):
     def setUp(self):
@@ -90,3 +135,129 @@ class SubtaskSerializerTest(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("text", serializer.errors)
         self.assertIn("status", serializer.errors)
+
+
+class TaskSerializerEdgeCaseTest(TestCase):
+    def test_validate_task_without_title(self):
+        data = {
+            "description": "Task without title",
+            "category": "Technical Task",
+            "date": "2025-04-02",
+            "prio": "low",
+            "status": "toDo",
+        }
+        serializer = TaskSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("title", serializer.errors)
+
+    def test_validate_task_with_empty_subtasks(self):
+        data = {
+            "title": "Task with Empty Subtasks",
+            "description": "This task has no subtasks.",
+            "category": "Technical Task",
+            "date": "2025-04-02",
+            "prio": "low",
+            "status": "toDo",
+            "subtasks": [],
+        }
+        serializer = TaskSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_validate_task_with_invalid_prio(self):
+        data = {
+            "title": "Invalid Prio Task",
+            "description": "This is a test task.",
+            "category": "Technical Task",
+            "date": "2025-04-02",
+            "prio": "invalid",
+            "status": "toDo",
+        }
+        serializer = TaskSerializer(data=data)  # Debugging line
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("prio", serializer.errors)
+
+    def test_validate_task_with_invalid_status(self):
+        data = {
+            "title": "Invalid Status Task",
+            "description": "This is a test task.",
+            "category": "Technical Task",
+            "date": "2025-04-02",
+            "prio": "low",
+            "status": "invalid",
+        }
+        serializer = TaskSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("status", serializer.errors)
+
+
+class SubtaskSerializerEdgeCaseTest(TestCase):
+    def test_validate_subtask_without_text(self):
+        data = {"text": "", "status": "unchecked"}
+        serializer = SubtaskSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("text", serializer.errors)
+
+    def test_validate_subtask_with_invalid_status(self):
+        data = {"text": "Subtask with Invalid Status", "status": "invalid"}
+        serializer = SubtaskSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("status", serializer.errors)
+
+
+class HandleSubtasksTest(TestCase):
+    def setUp(self):
+        self.task = Task.objects.create(
+            title="Test Task",
+            description="This is a test task.",
+            category="User Story",
+            date=datetime.date.today(),
+            prio="medium",
+            status="toDo",
+        )
+
+    def test_handle_subtasks_create_and_update(self):
+        subtasks_data = [
+            {"text": "Subtask 1", "status": "unchecked"},
+            {"text": "Subtask 2", "status": "checked"},
+        ]
+        serializer = TaskSerializer()
+        serializer.handle_subtasks(self.task, subtasks_data)
+        self.assertEqual(self.task.subtasks.count(), 2)
+
+
+class TaskSerializerHandleAssignedToTest(TestCase):
+    def setUp(self):
+        self.task = Task.objects.create(
+            title="Test Task",
+            description="This is a test task.",
+            category="User Story",
+            date=datetime.date.today(),
+            prio="medium",
+            status="toDo",
+        )
+
+    def test_handle_assigned_to_missing_id(self):
+        data = {
+            "title": "Updated Task",
+            "assigned_to": [{}],
+        }
+        serializer = TaskSerializer(instance=self.task, data=data, partial=True)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("assigned_to", serializer.errors)
+        self.assertEqual(serializer.errors["assigned_to"][0], "Each contact must include an 'id' field.")
+
+    def test_handle_assigned_to_nonexistent_contact(self):
+        data = {
+            "title": "Updated Task",
+            "assigned_to": [{"id": "00000000-0000-0000-0000-000000000000"}],
+        }
+        serializer = TaskSerializer(instance=self.task, data=data, partial=True)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("assigned_to", serializer.errors)
+
+        assigned_to_errors = serializer.errors["assigned_to"]
+        self.assertIn("id", assigned_to_errors[0])
+        self.assertEqual(
+            assigned_to_errors[0]["id"][0],
+            "Contact with id 00000000-0000-0000-0000-000000000000 does not exist.",
+        )

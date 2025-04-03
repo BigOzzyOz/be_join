@@ -51,8 +51,6 @@ class ContactSerializerTest(TestCase):
             "profile_pic": None,
         }
         serializer = ContactSerializer(data=data)
-        print(serializer.is_valid())
-        print(serializer.errors)
         self.assertTrue(serializer.is_valid())
 
     def test_invalid_email(self):
@@ -71,14 +69,29 @@ class ContactSerializerTest(TestCase):
     def test_update_existing_contact(self):
         data = {
             "name": "John Doe Updated",
-            "mail": "john.doe@example.com",  # Gleiche E-Mail wie bestehender Kontakt
+            "mail": "john.doe@example.com",
             "number": "+987654321",
             "first_letters": "JD",
             "profile_pic": "<svg>Updated</svg>",
         }
         serializer = ContactSerializer(instance=self.contact, data=data)
-        self.assertTrue(serializer.is_valid())  # Validierung sollte erfolgreich sein
+        self.assertTrue(serializer.is_valid())
         updated_contact = serializer.save()
         self.assertEqual(updated_contact.name, "John Doe Updated")
         self.assertEqual(updated_contact.number, "+987654321")
         self.assertEqual(updated_contact.profile_pic, "<svg>Updated</svg>")
+
+    def test_create_contact_with_missing_required_fields(self):
+        data = {"name": "Missing Email"}
+        serializer = ContactSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("mail", serializer.errors)
+
+    def test_create_contact_with_invalid_phone_number(self):
+        data = {
+            "name": "Invalid Phone",
+            "mail": "invalid.phone@example.com",
+            "number": "invalid-phone",
+        }
+        serializer = ContactSerializer(data=data)
+        self.assertTrue(serializer.is_valid())  # Phone number is optional and not validated
