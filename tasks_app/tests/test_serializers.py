@@ -99,7 +99,7 @@ class TaskSerializerTest(TestCase):
 
         data = {
             "title": "Updated Task",
-            "subtasks": [],  # Keine Subtasks mehr vorhanden
+            "subtasks": [],
         }
         serializer = TaskSerializer(instance=task, data=data, partial=True)
         self.assertTrue(serializer.is_valid())
@@ -172,7 +172,7 @@ class TaskSerializerEdgeCaseTest(TestCase):
             "prio": "invalid",
             "status": "toDo",
         }
-        serializer = TaskSerializer(data=data)  # Debugging line
+        serializer = TaskSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn("prio", serializer.errors)
 

@@ -3,10 +3,16 @@ from rest_framework import status
 from tasks_app.models import Task, Subtask
 from contacts_app.models import Contact
 import datetime
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
 
 
 class TaskViewSetTest(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+
         self.contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
         self.task = Task.objects.create(
             title="Test Task",
@@ -36,6 +42,10 @@ class TaskViewSetTest(APITestCase):
 
 class TaskViewSetEdgeCaseTest(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+
         self.contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
         self.task = Task.objects.create(
             title="Test Task",

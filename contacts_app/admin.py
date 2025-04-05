@@ -4,6 +4,6 @@ from contacts_app.models import Contact
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ("name", "mail", "number", "first_letters")  # Felder in der Listenansicht
-    search_fields = ("name", "mail")  # Suchfelder
-    list_filter = ("first_letters",)  # Filteroptionen
+    list_display = ("name", "mail", "number", "first_letters")
+    search_fields = ("name", "mail")
+    list_filter = ("first_letters",)

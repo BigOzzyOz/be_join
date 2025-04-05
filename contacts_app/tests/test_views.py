@@ -2,10 +2,16 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from contacts_app.models import Contact
 from django.urls import reverse
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
 
 
 class ContactViewSetTest(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+
         self.contact = Contact.objects.create(
             name="John Doe",
             mail="john.doe@example.com",
@@ -29,8 +35,8 @@ class ContactViewSetTest(APITestCase):
 
     def test_create_contact(self):
         data = {
-            "name": "Jane Doe",
-            "mail": "jane.doe@example.com",
+            "name": "June Doe",
+            "mail": "june.doe@example.com",
             "number": "+987654321",
             "first_letters": "JD",
             "profile_pic": "<svg>...</svg>",
@@ -38,7 +44,7 @@ class ContactViewSetTest(APITestCase):
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Contact.objects.count(), 2)
-        self.assertEqual(Contact.objects.last().name, "Jane Doe")
+        self.assertEqual(Contact.objects.order_by("name").last().name, "June Doe")
 
     def test_update_contact(self):
         url = reverse("contact-detail", args=[self.contact.id])

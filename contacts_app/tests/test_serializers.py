@@ -94,4 +94,4 @@ class ContactSerializerTest(TestCase):
             "number": "invalid-phone",
         }
         serializer = ContactSerializer(data=data)
-        self.assertTrue(serializer.is_valid())  # Phone number is optional and not validated
+        self.assertTrue(serializer.is_valid())
