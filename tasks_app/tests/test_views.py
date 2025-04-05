@@ -91,3 +91,73 @@ class TaskViewSetEdgeCaseTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Task.objects.filter(id=self.task.id).exists())
         self.assertFalse(Subtask.objects.filter(id=subtask.id).exists())
+
+
+class SummaryViewTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+
+        self.contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
+
+        Task.objects.create(
+            title="Task 1",
+            description="To Do Task",
+            category="User Story",
+            date=datetime.date.today(),
+            prio="medium",
+            status="toDo",
+        )
+
+        Task.objects.create(
+            title="Task 2",
+            description="In Progress Task",
+            category="Technical Task",
+            date=datetime.date.today(),
+            prio="urgent",
+            status="inProgress",
+        )
+
+        Task.objects.create(
+            title="Task 3",
+            description="Await Feedback Task",
+            category="User Story",
+            date=datetime.date.today(),
+            prio="low",
+            status="awaitFeedback",
+        )
+
+        Task.objects.create(
+            title="Task 4",
+            description="Done Task",
+            category="Technical Task",
+            date=datetime.date.today(),
+            prio="urgent",
+            status="done",
+        )
+
+    def test_summary_view(self):
+        response = self.client.get("/api/tasks/summary/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_data = {
+            "todos": 1,
+            "in_progress": 1,
+            "await_feedback": 1,
+            "done": 1,
+            "total": 4,
+            "urgent": 2,
+        }
+        self.assertEqual(response.data, expected_data)
+
+    def test_summary_view_no_tasks(self):
+        Task.objects.all().delete()
+        response = self.client.get("/api/tasks/summary/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, {"error": "No tasks found"})
+
+    def test_summary_view_method_not_allowed(self):
+        response = self.client.post("/api/tasks/summary/")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response.data, {"detail": 'Method "POST" not allowed.'})

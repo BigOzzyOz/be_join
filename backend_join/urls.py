@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/tasks/", include("tasks_app.api.urls")),
     path("api/contacts/", include("contacts_app.api.urls")),
     path("auth/", include("user_auth_app.api.urls")),
+    path("api-auth", include("rest_framework.urls", namespace="rest_framework")),
 ]
