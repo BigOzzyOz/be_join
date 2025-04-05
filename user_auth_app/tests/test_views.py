@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
+from user_auth_app.models import ProfileUser
 
 
 class UserAuthViewTest(APITestCase):
@@ -54,3 +54,27 @@ class UserAuthViewTest(APITestCase):
         response = self.client.post(self.register_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Email already exists.", str(response.data))
+
+
+class GuestUserViewTest(APITestCase):
+    def setUp(self):
+        self.guest_url = "/auth/guest/"
+
+    def test_guest_user_creation(self):
+        response = self.client.post(self.guest_url, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("token", response.data)
+        self.assertEqual(response.data["username"], "guest")
+        self.assertTrue(User.objects.filter(username="guest").exists())
+        self.assertTrue(ProfileUser.objects.filter(user__username="guest").exists())
+
+    def test_guest_user_reuse(self):
+        User.objects.create_user(username="guest", password="guest")
+        first_login_response = self.client.post(self.guest_url, format="json")
+        self.assertEqual(first_login_response.status_code, status.HTTP_201_CREATED)
+        second_login_response = self.client.post(self.guest_url, format="json")
+        self.assertEqual(second_login_response.status_code, status.HTTP_200_OK)
+        self.assertIn("token", second_login_response.data)
+        self.assertEqual(second_login_response.data["username"], "guest")
+        self.assertEqual(User.objects.filter(username="guest").count(), 1)
+        self.assertEqual(ProfileUser.objects.filter(user__username="guest").count(), 1)
