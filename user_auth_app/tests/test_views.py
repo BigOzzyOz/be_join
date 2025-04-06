@@ -1,5 +1,6 @@
-from rest_framework.test import APITestCase
 from rest_framework import status
+from rest_framework.test import APITestCase
+from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from user_auth_app.models import ProfileUser
 
@@ -81,3 +82,22 @@ class GuestUserViewTest(APITestCase):
         self.assertEqual(second_login_response.data["username"], "guest")
         self.assertEqual(User.objects.filter(username="guest").count(), 1)
         self.assertEqual(ProfileUser.objects.filter(user__username="guest").count(), 1)
+
+
+class CheckAuthStatusViewTest(APITestCase):
+    def setUp(self):
+        self.auth_status_url = "/auth/status/"
+        self.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
+        self.token = Token.objects.create(user=self.user)
+
+    def test_authenticated_user(self):
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+        response = self.client.get(self.auth_status_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["authenticated"], True)
+        self.assertEqual(response.data["username"], "testuser")
+
+    def test_unauthenticated_user(self):
+        response = self.client.get(self.auth_status_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["authenticated"], False)

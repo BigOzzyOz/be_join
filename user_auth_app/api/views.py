@@ -59,6 +59,7 @@ class UserRegistrationView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        data = {}
         if serializer.is_valid():
             user = serializer.save()
             token, created = Token.objects.get_or_create(user=user)
@@ -73,3 +74,18 @@ class UserRegistrationView(generics.CreateAPIView):
             data = serializer.errors
         status_code = status.HTTP_201_CREATED if serializer.is_valid() else status.HTTP_400_BAD_REQUEST
         return Response(data, status=status_code)
+
+
+class CheckAuthStatusView(generics.RetrieveAPIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        user = request.user
+        if user.is_authenticated:
+            data = {
+                "username": user.username,
+                "authenticated": True,
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            return Response({"authenticated": False})
