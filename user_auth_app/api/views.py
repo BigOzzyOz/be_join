@@ -19,6 +19,7 @@ class UserLoginView(ObtainAuthToken):
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             token, created = Token.objects.get_or_create(user=user)
+            data["name"] = f"{user.first_name} {user.last_name}"
             data["username"] = user.username
             data["email"] = user.email
             data["token"] = token.key
@@ -61,7 +62,13 @@ class UserRegistrationView(generics.CreateAPIView):
         if serializer.is_valid():
             user = serializer.save()
             token, created = Token.objects.get_or_create(user=user)
-            data = {"username": user.username, "email": user.email, "token": token.key}
+            data = {
+                "username": user.username,
+                "email": user.email,
+                "token": token.key,
+                "name": f"{user.first_name} {user.last_name}",
+                "id": ProfileUser.objects.get(user=user).id,
+            }
         else:
             data = serializer.errors
         status_code = status.HTTP_201_CREATED if serializer.is_valid() else status.HTTP_400_BAD_REQUEST

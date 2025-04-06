@@ -24,19 +24,21 @@ class UserAuthViewTest(APITestCase):
 
     def test_user_registration_success(self):
         data = {
-            "username": "newuser",
             "email": "newuser@example.com",
+            "name": "New User",
             "password": "Test@1234",
             "repeated_password": "Test@1234",
         }
         response = self.client.post(self.register_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("token", response.data)
+        self.assertEqual(response.data["username"], "newuser@example.com")
+        self.assertEqual(response.data["email"], "newuser@example.com")
 
     def test_user_registration_password_mismatch(self):
         data = {
-            "username": "newuser",
             "email": "newuser@example.com",
+            "name": "New User",
             "password": "Test@1234",
             "repeated_password": "Mismatch1234",
         }
@@ -45,9 +47,10 @@ class UserAuthViewTest(APITestCase):
         self.assertIn("Passwords do not match.", str(response.data))
 
     def test_user_registration_duplicate_email(self):
+        User.objects.create_user(username="testuser@example.com", email="testuser@example.com", password="Test@1234")
         data = {
-            "username": "newuser",
             "email": "testuser@example.com",
+            "name": "New User",
             "password": "Test@1234",
             "repeated_password": "Test@1234",
         }

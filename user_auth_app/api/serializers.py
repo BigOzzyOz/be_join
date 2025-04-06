@@ -11,10 +11,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeated_password = serializers.CharField()
+    name = serializers.CharField(required=False)
 
     class Meta:
         model = User
-        fields = ("username", "email", "password", "repeated_password")
+        fields = ("email", "name", "password", "repeated_password")
         extra_kwargs = {
             "password": {"write_only": True},
             "repeated_password": {"write_only": True},
@@ -49,12 +50,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def save(self):
+        login = self.validated_data["email"]
+        name = self.validated_data["name"]
         password = self.validated_data["password"]
-        email = self.validated_data["email"]
-        username = self.validated_data["username"]
         user = User(
-            username=username,
-            email=email,
+            username=login,
+            email=login,
+            first_name=name.split()[0] if name else "",
+            last_name=name.split()[1] if len(name.split()) > 1 else "",
         )
         user.set_password(password)
         user.save()

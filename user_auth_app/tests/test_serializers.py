@@ -52,23 +52,10 @@ class RegisterSerializerValidationTest(TestCase):
         self.assertIn("email", serializer.errors)
         self.assertEqual(serializer.errors["email"][0], "Email already exists.")
 
-    def test_validate_username_already_exists(self):
-        User.objects.create_user(username="existinguser", email="existing@example.com", password="Test@1234")
-        data = {
-            "username": "existinguser",
-            "email": "new@example.com",
-            "password": "Test@1234",
-            "repeated_password": "Test@1234",
-        }
-        serializer = RegisterSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("username", serializer.errors)
-        self.assertEqual(serializer.errors["username"][0], "A user with that username already exists.")
-
     def test_validate_password_too_short(self):
         data = {
-            "username": "newuser",
-            "email": "new@example.com",
+            "email": "newuser@example.com",
+            "name": "New User",
             "password": "Short1!",
             "repeated_password": "Short1!",
         }
@@ -79,8 +66,8 @@ class RegisterSerializerValidationTest(TestCase):
 
     def test_validate_password_missing_digit(self):
         data = {
-            "username": "newuser",
-            "email": "new@example.com",
+            "email": "newuser@example.com",
+            "name": "New User",
             "password": "Password!",
             "repeated_password": "Password!",
         }
@@ -103,8 +90,8 @@ class RegisterSerializerValidationTest(TestCase):
 
     def test_validate_password_missing_uppercase(self):
         data = {
-            "username": "newuser",
-            "email": "new@example.com",
+            "email": "newuser@example.com",
+            "name": "New User",
             "password": "password1!",
             "repeated_password": "password1!",
         }
