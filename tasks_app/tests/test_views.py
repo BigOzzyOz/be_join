@@ -13,7 +13,7 @@ class TaskViewSetTest(APITestCase):
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
 
-        self.contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
+        self.contact = Contact.objects.create(name="John Doe", email="john.doe@example.com")
         self.task = Task.objects.create(
             title="Test Task",
             description="This is a test task.",
@@ -46,7 +46,7 @@ class TaskViewSetEdgeCaseTest(APITestCase):
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
 
-        self.contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
+        self.contact = Contact.objects.create(name="John Doe", email="john.doe@example.com")
         self.task = Task.objects.create(
             title="Test Task",
             description="This is a test task.",
@@ -99,7 +99,7 @@ class SummaryViewTest(APITestCase):
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
 
-        self.contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
+        self.contact = Contact.objects.create(name="John Doe", email="john.doe@example.com")
 
         Task.objects.create(
             title="Task 1",

@@ -9,10 +9,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ["id", "name", "mail", "number", "first_letters", "profile_pic"]
-
-    def validate_mail(self, value):
-        return value
+        fields = ["id", "name", "email", "number", "first_letters", "profile_pic"]
 
 
 class ContactIDSerializer(ContactSerializer):
@@ -20,8 +17,8 @@ class ContactIDSerializer(ContactSerializer):
 
     class Meta:
         model = Contact
-        read_only_fields = ["id", "name", "mail", "number", "first_letters", "profile_pic"]
-        fields = ["id", "name", "mail", "number", "first_letters", "profile_pic"]
+        read_only_fields = ["id", "name", "email", "number", "first_letters", "profile_pic"]
+        fields = ["id", "name", "email", "number", "first_letters", "profile_pic"]
 
     def validate_id(self, value):
         if not Contact.objects.filter(id=value).exists():

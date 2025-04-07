@@ -14,7 +14,7 @@ class ContactViewSetTest(APITestCase):
 
         self.contact = Contact.objects.create(
             name="John Doe",
-            mail="john.doe@example.com",
+            email="john.doe@example.com",
             number="+123456789",
             first_letters="JD",
             profile_pic="<svg>...</svg>",
@@ -36,7 +36,7 @@ class ContactViewSetTest(APITestCase):
     def test_create_contact(self):
         data = {
             "name": "June Doe",
-            "mail": "june.doe@example.com",
+            "email": "june.doe@example.com",
             "number": "+987654321",
             "first_letters": "JD",
             "profile_pic": "<svg>...</svg>",
@@ -50,7 +50,7 @@ class ContactViewSetTest(APITestCase):
         url = reverse("contact-detail", args=[self.contact.id])
         data = {
             "name": "John Updated",
-            "mail": "john.doe@example.com",
+            "email": "john.doe@example.com",
             "number": "+987654321",
             "first_letters": "JU",
             "profile_pic": "<svg>Updated</svg>",
@@ -70,9 +70,9 @@ class ContactViewSetTest(APITestCase):
     def test_create_contact_with_duplicate_email(self):
         data = {
             "name": "Duplicate Email",
-            "mail": "john.doe@example.com",
+            "email": "john.doe@example.com",
             "number": "+123456789",
         }
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("mail", response.data)
+        self.assertIn("email", response.data)

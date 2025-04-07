@@ -7,7 +7,7 @@ import datetime
 
 class TaskSerializerTest(TestCase):
     def setUp(self):
-        self.contact = Contact.objects.create(name="John Doe", mail="john.doe@example.com")
+        self.contact = Contact.objects.create(name="John Doe", email="john.doe@example.com")
         self.task = Task.objects.create(
             title="Test Task",
             description="This is a test task.",
@@ -35,7 +35,7 @@ class TaskSerializerTest(TestCase):
                 {
                     "id": str(self.contact.id),
                     "name": "John Doe",
-                    "mail": "john.doe@example.com",
+                    "email": "john.doe@example.com",
                     "number": None,
                     "first_letters": None,
                     "profile_pic": None,

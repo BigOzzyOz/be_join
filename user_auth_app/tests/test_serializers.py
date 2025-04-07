@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
+from contacts_app.models import Contact
+from user_auth_app.models import ProfileUser
 from user_auth_app.api.serializers import RegisterSerializer
 
 
@@ -36,6 +38,63 @@ class RegisterSerializerTest(TestCase):
         serializer = RegisterSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn("email", serializer.errors)
+
+    def test_contact_created_on_user_registration(self):
+        data = {
+            "email": "newuser@example.com",
+            "name": "New User",
+            "password": "Test@1234",
+            "repeated_password": "Test@1234",
+        }
+        serializer = RegisterSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        serializer.save()
+        self.assertTrue(User.objects.filter(email="newuser@example.com").exists())
+        contact = Contact.objects.get(email="newuser@example.com")
+        self.assertEqual(contact.name, "New User")
+        self.assertEqual(contact.email, "newuser@example.com")
+        self.assertEqual(contact.number, "Please add your number")
+        self.assertEqual(contact.is_user, True)
+        self.assertIsNotNone(contact.profile_pic)
+
+    def test_contact_updated_on_user_registration(self):
+        contact = Contact.objects.create(
+            name="Old Name",
+            email="existing@example.com",
+            number="Old Number",
+            is_user=False,
+        )
+
+        data = {
+            "email": "existing@example.com",
+            "name": "Updated User",
+            "password": "Test@1234",
+            "repeated_password": "Test@1234",
+        }
+        serializer = RegisterSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+        contact.refresh_from_db()
+        self.assertEqual(contact.name, "Updated User")
+        self.assertEqual(contact.email, "existing@example.com")
+        self.assertEqual(contact.number, "Please add your number")
+        self.assertEqual(contact.is_user, True)
+        self.assertIsNotNone(contact.profile_pic)
+
+    def test_contact_first_letters_generated_correctly(self):
+        data = {
+            "email": "newuser@example.com",
+            "name": "John Doe",
+            "password": "Test@1234",
+            "repeated_password": "Test@1234",
+        }
+        serializer = RegisterSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        serializer.save()
+
+        contact = Contact.objects.get(email="newuser@example.com")
+        self.assertEqual(contact.first_letters, "JD")
 
 
 class RegisterSerializerValidationTest(TestCase):
