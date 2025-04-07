@@ -148,6 +148,7 @@ class SummaryViewTest(APITestCase):
             "done": 1,
             "total": 4,
             "urgent": 2,
+            "next_urgent_due": str(datetime.date.today()),
         }
         self.assertEqual(response.data, expected_data)
 

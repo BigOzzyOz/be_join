@@ -19,6 +19,8 @@ class SummaryView(ListAPIView):
         tasks = self.get_queryset()
         if not tasks.exists():
             return Response({"error": "No tasks found"}, status=status.HTTP_404_NOT_FOUND)
+        tasks_date_sort = tasks.order_by("date")
+        next_urgent_due = tasks_date_sort.first().date if tasks_date_sort else None
         data = {
             "todos": tasks.filter(status="toDo").count(),
             "in_progress": tasks.filter(status="inProgress").count(),
@@ -26,5 +28,6 @@ class SummaryView(ListAPIView):
             "done": tasks.filter(status="done").count(),
             "total": tasks.count(),
             "urgent": tasks.filter(prio="urgent").count(),
+            "next_urgent_due": next_urgent_due.strftime("%Y-%m-%d") if next_urgent_due else None,
         }
         return Response(data)
