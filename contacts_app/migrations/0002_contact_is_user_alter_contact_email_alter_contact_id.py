@@ -5,25 +5,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('contacts_app', '0001_initial'),
+        ("contacts_app", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contact',
-            name='is_user',
+            model_name="contact",
+            name="is_user",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='contact',
-            name='email',
-            field=models.EmailField(max_length=254, primary_key=True, serialize=False, unique=True),
+            model_name="contact",
+            name="email",
+            field=models.EmailField(max_length=254, unique=True),
         ),
         migrations.AlterField(
-            model_name='contact',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            model_name="contact",
+            name="id",
+            field=models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True),
         ),
     ]

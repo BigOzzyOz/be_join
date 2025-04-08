@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from user_auth_app.api.serializers import RegisterSerializer
-from user_auth_app.models import ProfileUser
+from contacts_app.models import Contact
 
 
 class UserLoginView(ObtainAuthToken):
@@ -23,7 +23,7 @@ class UserLoginView(ObtainAuthToken):
             data["username"] = user.username
             data["email"] = user.email
             data["token"] = token.key
-            data["id"] = ProfileUser.objects.get(user=user).id
+            data["id"] = Contact.objects.get(user=user).id
         else:
             data = serializer.errors
         status_code = status.HTTP_201_CREATED if serializer.is_valid() else status.HTTP_400_BAD_REQUEST
@@ -47,7 +47,7 @@ class GuestUserView(ObtainAuthToken):
             "username": guest_user.username,
             "email": guest_user.email,
             "token": token.key,
-            "id": ProfileUser.objects.get(user=guest_user).id,
+            "id": Contact.objects.get(user=guest_user).id,
         }
         status_code = status.HTTP_201_CREATED if created_user or created_token else status.HTTP_200_OK
         return Response(data, status=status_code)
@@ -68,7 +68,7 @@ class UserRegistrationView(generics.CreateAPIView):
                 "email": user.email,
                 "token": token.key,
                 "name": f"{user.first_name} {user.last_name}",
-                "id": ProfileUser.objects.get(user=user).id,
+                "id": Contact.objects.get(user=user).id,
             }
         else:
             data = serializer.errors

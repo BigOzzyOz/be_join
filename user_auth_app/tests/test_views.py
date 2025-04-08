@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
-from user_auth_app.models import ProfileUser
+from contacts_app.models import Contact
 
 
 class UserAuthViewTest(APITestCase):
@@ -70,7 +70,7 @@ class GuestUserViewTest(APITestCase):
         self.assertIn("token", response.data)
         self.assertEqual(response.data["username"], "guest")
         self.assertTrue(User.objects.filter(username="guest").exists())
-        self.assertTrue(ProfileUser.objects.filter(user__username="guest").exists())
+        self.assertTrue(Contact.objects.filter(user__username="guest").exists())
 
     def test_guest_user_reuse(self):
         User.objects.create_user(username="guest", password="guest")
@@ -81,7 +81,7 @@ class GuestUserViewTest(APITestCase):
         self.assertIn("token", second_login_response.data)
         self.assertEqual(second_login_response.data["username"], "guest")
         self.assertEqual(User.objects.filter(username="guest").count(), 1)
-        self.assertEqual(ProfileUser.objects.filter(user__username="guest").count(), 1)
+        self.assertEqual(Contact.objects.filter(user__username="guest").count(), 1)
 
 
 class CheckAuthStatusViewTest(APITestCase):

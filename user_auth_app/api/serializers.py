@@ -1,14 +1,5 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from contacts_app.models import Contact
-from user_auth_app.models import ProfileUser
-from contacts_app.utils import generate_svg_circle_with_initials
-
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model: ProfileUser
-        fields = ("id", "user")
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -63,20 +54,5 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(password)
         user.save()
-
-        contact, created = Contact.objects.update_or_create(
-            email=user.email,
-            defaults={
-                "id": ProfileUser.objects.get(user=user).id,
-                "name": f"{user.first_name} {user.last_name}",
-                "number": "Please add your number",
-                "email": user.email,
-                "first_letters": "".join(
-                    [name[0].upper() for name in f"{user.first_name} {user.last_name}".split() if name]
-                ),
-                "is_user": True,
-                "profile_pic": generate_svg_circle_with_initials(f"{user.first_name} {user.last_name}"),
-            },
-        )
 
         return user

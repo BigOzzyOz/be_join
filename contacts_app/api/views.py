@@ -4,6 +4,7 @@ from contacts_app.api.serializers import ContactSerializer
 
 
 class ContactViewSet(ModelViewSet):
-    queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    lookup_field = "id"
+
+    def get_queryset(self):
+        return Contact.objects.exclude(name__in=["guest", "admin"])

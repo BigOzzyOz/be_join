@@ -1,17 +1,17 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from user_auth_app.models import ProfileUser
+from contacts_app.models import Contact
 
 
-class ProfileUserModelTest(TestCase):
+class ContactUserModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
-        self.profile = ProfileUser.objects.get(user=self.user)
+        self.contact = Contact.objects.get(user=self.user)
 
     def test_profile_creation(self):
-        self.assertEqual(self.profile.user.username, "testuser")
-        self.assertEqual(str(self.profile), "testuser")
+        self.assertEqual(self.contact.user.username, "testuser")
+        self.assertEqual(str(self.contact), "testuser")
 
     def test_profile_uuid(self):
-        self.assertIsNotNone(self.profile.id)
-        self.assertEqual(self.profile.id, self.profile.pk)
+        self.assertIsNotNone(self.contact.id)
+        self.assertEqual(self.contact.id, self.contact.pk)

@@ -1,7 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from contacts_app.models import Contact
-from user_auth_app.models import ProfileUser
 from user_auth_app.api.serializers import RegisterSerializer
 
 
@@ -64,7 +63,6 @@ class RegisterSerializerTest(TestCase):
             number="Old Number",
             is_user=False,
         )
-
         data = {
             "email": "existing@example.com",
             "name": "Updated User",
@@ -78,7 +76,7 @@ class RegisterSerializerTest(TestCase):
         contact.refresh_from_db()
         self.assertEqual(contact.name, "Updated User")
         self.assertEqual(contact.email, "existing@example.com")
-        self.assertEqual(contact.number, "Please add your number")
+        self.assertEqual(contact.number, "Old Number")
         self.assertEqual(contact.is_user, True)
         self.assertIsNotNone(contact.profile_pic)
 

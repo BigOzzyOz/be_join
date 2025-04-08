@@ -12,13 +12,11 @@ class Migration(migrations.Migration):
             name="Contact",
             fields=[
                 (
-                    "id",
-                    models.UUIDField(
-                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True
-                    ),
+                    "email",
+                    models.EmailField(max_length=254, serialize=False, unique=True),
                 ),
                 ("name", models.CharField(max_length=255)),
-                ("email", models.EmailField(max_length=254, unique=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True)),
                 ("number", models.CharField(blank=True, max_length=20, null=True)),
                 ("first_letters", models.CharField(blank=True, max_length=2, null=True)),
                 ("profile_pic", models.TextField(blank=True, null=True)),

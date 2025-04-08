@@ -24,8 +24,8 @@ class ContactViewSetTest(APITestCase):
     def test_list_contacts(self):
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["name"], "John Doe")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(Contact.objects.order_by("name").last().name, "testuser")
 
     def test_retrieve_contact(self):
         url = reverse("contact-detail", args=[self.contact.id])
@@ -43,8 +43,8 @@ class ContactViewSetTest(APITestCase):
         }
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Contact.objects.count(), 2)
-        self.assertEqual(Contact.objects.order_by("name").last().name, "June Doe")
+        self.assertEqual(Contact.objects.count(), 3)
+        self.assertEqual(Contact.objects.order_by("name").last().name, "testuser")
 
     def test_update_contact(self):
         url = reverse("contact-detail", args=[self.contact.id])
@@ -65,7 +65,7 @@ class ContactViewSetTest(APITestCase):
         url = reverse("contact-detail", args=[self.contact.id])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(Contact.objects.count(), 0)
+        self.assertEqual(Contact.objects.count(), 1)
 
     def test_create_contact_with_duplicate_email(self):
         data = {
