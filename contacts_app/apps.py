@@ -6,3 +6,6 @@ class ContactsAppConfig(AppConfig):
     name = "contacts_app"
     verbose_name = "Contacts Management"
     verbose_name_plural = "Contacts Management"
+
+    def ready(self):
+        import contacts_app.signals
