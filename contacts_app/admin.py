@@ -7,3 +7,4 @@ class ContactAdmin(admin.ModelAdmin):
     list_display = ("name", "email", "first_letters", "user")
     search_fields = ("name", "email", "user")
     list_filter = ("first_letters",)
+    ordering = ("name",)

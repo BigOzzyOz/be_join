@@ -8,6 +8,7 @@ class TaskAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
     list_filter = ("category", "prio", "status", "date")
     filter_horizontal = ("assigned_to",)
+    ordering = ("-date",)
 
 
 @admin.register(Subtask)
@@ -15,3 +16,4 @@ class SubtaskAdmin(admin.ModelAdmin):
     list_display = ("text", "task", "status")
     search_fields = ("text",)
     list_filter = ("status",)
+    ordering = ("-task__date",)

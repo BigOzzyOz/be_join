@@ -31,3 +31,7 @@ def svg_profile_pic(color, initials, height, width):
       <text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="48px">{initials}</text>
     </svg>
     """
+
+
+def contact_is_no_user_and_user_not_guest(obj, request):
+    return not obj.is_user and request.user.is_authenticated and request.user.username != "guest"
