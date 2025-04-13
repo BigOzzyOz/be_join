@@ -36,7 +36,8 @@ class GuestUserView(ObtainAuthToken):
     def post(self, request):
         with transaction.atomic():
             guest_user, created_user = User.objects.select_for_update().get_or_create(
-                username="guest", defaults={"password": "guest"}
+                username="guest",
+                defaults={"password": "guest", "first_name": "Guest", "last_name": "User", "email": "guest@user.de"},
             )
             if created_user:
                 guest_user.set_password("guest")

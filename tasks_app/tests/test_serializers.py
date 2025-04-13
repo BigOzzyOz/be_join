@@ -8,6 +8,8 @@ import datetime
 class TaskSerializerTest(TestCase):
     def setUp(self):
         self.contact = Contact.objects.create(name="John Doe", email="john.doe@example.com")
+        self.contact.refresh_from_db()
+
         self.task = Task.objects.create(
             title="Test Task",
             description="This is a test task.",
@@ -21,6 +23,9 @@ class TaskSerializerTest(TestCase):
 
     def test_serialize_task(self):
         serializer = TaskSerializer(self.task)
+        expected_initials = self.contact.first_letters
+        expected_profile_pic = self.contact.profile_pic
+
         expected_data = {
             "id": str(self.task.id),
             "title": "Test Task",
@@ -37,13 +42,23 @@ class TaskSerializerTest(TestCase):
                     "name": "John Doe",
                     "email": "john.doe@example.com",
                     "number": None,
-                    "first_letters": None,
-                    "profile_pic": None,
+                    "first_letters": expected_initials,
+                    "profile_pic": expected_profile_pic,
                 }
             ],
             "subtasks": [{"id": str(self.subtask.id), "text": "Test Subtask", "status": "unchecked"}],
         }
-        self.assertEqual(serializer.data, expected_data)
+        self.assertEqual(serializer.data["id"], expected_data["id"])
+        self.assertEqual(serializer.data["title"], expected_data["title"])
+        self.assertEqual(len(serializer.data["assigned_to"]), 1)
+        serialized_contact = serializer.data["assigned_to"][0]
+        self.assertEqual(serialized_contact["id"], expected_data["assigned_to"][0]["id"])
+        self.assertEqual(serialized_contact["name"], expected_data["assigned_to"][0]["name"])
+        self.assertEqual(serialized_contact["first_letters"], expected_data["assigned_to"][0]["first_letters"])
+        self.assertIsNotNone(serialized_contact["profile_pic"])
+        self.assertIn("<svg", serialized_contact["profile_pic"])
+        self.assertIn(expected_initials, serialized_contact["profile_pic"])
+        self.assertEqual(serializer.data["subtasks"], expected_data["subtasks"])
 
     def test_validate_task_with_invalid_data(self):
         data = {

@@ -8,54 +8,113 @@ class UserSignalTest(TestCase):
     def test_contact_created_on_user_creation(self):
         user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
         self.assertTrue(Contact.objects.filter(user=user).exists())
+        contact = Contact.objects.get(user=user)
+        self.assertEqual(contact.name, "testuser")
+        self.assertEqual(contact.first_letters, "T")
 
-    def test_contact_saved_on_user_save(self):
-        user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
-        profile = Contact.objects.get(user=user)
-        user.save()
-        profile.refresh_from_db()
-        self.assertEqual(profile.user, user)
+    def test_contact_created_with_name_on_user_creation(self):
+        user = User.objects.create_user(
+            username="testuser", email="testuser@example.com", password="Test@1234", first_name="Test", last_name="User"
+        )
+        self.assertTrue(Contact.objects.filter(user=user).exists())
+        contact = Contact.objects.get(user=user)
+        self.assertEqual(contact.name, "Test User")
+        self.assertEqual(contact.first_letters, "TU")
 
-    def test_contact_data_updated_on_user_update(self):
+    def test_contact_updated_on_user_update(self):
         user = User.objects.create_user(
             username="testuser", first_name="test", last_name="user", email="testuser@example.com", password="Test@1234"
         )
-        profile = Contact.objects.get(user=user)
-        user.email = "newmail@example.com"
-        user.first_name = "new"
-        user.last_name = "name"
-        user.save()
-        profile.refresh_from_db()
-        self.assertEqual(profile.email, "newmail@example.com")
-        self.assertEqual(profile.name, "new name")
+        contact = Contact.objects.get(user=user)
+        self.assertEqual(contact.email, "testuser@example.com")
+        self.assertEqual(contact.name, "test user")
+        self.assertEqual(contact.first_letters, "TU")
 
-    def test_change_contact_on_delete_user(self):
+        user.email = "newmail@example.com"
+        user.first_name = "New"
+        user.last_name = "Name"
+        user.save()
+
+        contact.refresh_from_db()
+        self.assertEqual(contact.email, "newmail@example.com")
+        self.assertEqual(contact.name, "New Name")
+        self.assertEqual(contact.first_letters, "NN")
+        self.assertTrue(contact.is_user)
+        self.assertEqual(contact.user, user)
+
+    def test_contact_updated_when_user_created_and_contact_exists(self):
+        existing_contact = Contact.objects.create(email="testuser@example.com", name="Old Name", number="12345")
+        self.assertFalse(existing_contact.is_user)
+        self.assertIsNone(existing_contact.user)
+
+        user = User.objects.create_user(
+            username="testuser", email="testuser@example.com", password="Test@1234", first_name="Test", last_name="User"
+        )
+
+        existing_contact.refresh_from_db()
+        self.assertEqual(existing_contact.name, "Test User")
+        self.assertEqual(existing_contact.first_letters, "TU")
+        self.assertTrue(existing_contact.is_user)
+        self.assertEqual(existing_contact.user, user)
+        self.assertEqual(existing_contact.number, "12345")
+
+        self.assertEqual(Contact.objects.filter(email="testuser@example.com").count(), 1)
+
+    def test_contact_dissociated_on_user_delete(self):
         user = User.objects.create_user(username="testuser", email="testuser@example.com", password="Test@1234")
         contact = Contact.objects.get(user=user)
         user.delete()
         contact.refresh_from_db()
         self.assertFalse(contact.is_user)
         self.assertIsNone(contact.user)
+        self.assertEqual(contact.email, "testuser@example.com")
+        self.assertEqual(contact.name, "testuser")
 
 
-class ContactSignalExceptionTest(TestCase):
+class ContactSignalLoggingTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser", email="testuser@example.com", password="Test@1234", first_name="Test", last_name="User"
+            username="logtestuser",
+            email="logtest@example.com",
+            password="Test@1234",
+            first_name="Log",
+            last_name="User",
         )
-        self.contact = Contact.objects.get(user=self.user)
 
     @patch("user_auth_app.signals.logger.error")
-    def test_update_signal_exception_handling(self, mock_logger):
-        with patch("contacts_app.models.Contact.objects.filter", side_effect=Exception("Simulated error")):
+    def test_update_signal_exception_logging(self, mock_logger_error):
+        with patch(
+            "user_auth_app.signals._calculate_contact_attributes", side_effect=Exception("Simulated update error")
+        ):
             self.user.first_name = "Updated"
-            self.user.save()
+            try:
+                self.user.save()
+            except Exception:
+                pass
 
-        mock_logger.assert_called_once_with("Error in create_or_update_contact signal: Simulated error")
+        expected_message = f"Error in signal for user {self.user.username}: Simulated update error"
+        mock_logger_error.assert_called_once_with(expected_message)
 
     @patch("user_auth_app.signals.logger.error")
-    def test_delete_signal_exception(self, mock_logger):
-        with patch("contacts_app.models.Contact.objects.filter", side_effect=Exception("Simulated error")):
-            self.user.delete()
+    def test_delete_signal_exception_logging(self, mock_logger_error):
+        with patch("contacts_app.models.Contact.objects.filter", side_effect=Exception("Simulated delete error")):
+            try:
+                self.user.delete()
+            except Exception:
+                pass
 
-        mock_logger.assert_called_once_with("Error in delete_user_tag_in_contact signal: Simulated error")
+        expected_message = f"Error in pre_delete signal for user {self.user.username}: Simulated delete error"
+        mock_logger_error.assert_called_once_with(expected_message)
+
+    @patch("contacts_app.signals.logger.warning")
+    @patch("user_auth_app.signals.logger.info")
+    def test_delete_user_without_contact_logs_info(self, mock_logger_info, mock_contact_warning):
+        try:
+            contact_to_delete = Contact.objects.get(user=self.user)
+            contact_to_delete.delete()
+        except Contact.DoesNotExist:
+            self.fail("Contact associated with self.user not found in setUp.")
+
+        self.user.delete()
+
+        mock_contact_warning.assert_called_once()

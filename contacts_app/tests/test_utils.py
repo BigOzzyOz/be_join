@@ -1,8 +1,8 @@
-import unittest
-from contacts_app.utils import generate_svg_circle_with_initials, svg_profile_pic
+from django.test import TestCase
+from contacts_app.utils import generate_svg_circle_with_initials, _svg_profile_pic, get_initials_from_name
 
 
-class TestUtils(unittest.TestCase):
+class TestUtils(TestCase):
     def test_generate_svg_circle_with_initials(self):
         name = "John Doe"
         svg = generate_svg_circle_with_initials(name)
@@ -25,7 +25,7 @@ class TestUtils(unittest.TestCase):
             "#FFC701",
             "#FFE62B",
         ]
-        self.assertTrue(any(color in svg for color in colors))
+        self.assertTrue(any(f'fill="{color}"' in svg for color in colors))
         self.assertIn('width="120"', svg)
         self.assertIn('height="120"', svg)
 
@@ -34,16 +34,33 @@ class TestUtils(unittest.TestCase):
         initials = "JD"
         width = 100
         height = 100
-        svg = svg_profile_pic(color, initials, height, width)
+        svg = _svg_profile_pic(color, initials, height, width)
 
         self.assertIn("JD", svg)
         self.assertIn('fill="#FF0000"', svg)
         self.assertIn('width="100"', svg)
         self.assertIn('height="100"', svg)
-        self.assertIn(f'cx="{width / 2}"', svg)
-        self.assertIn(f'cy="{height / 2}"', svg)
-        self.assertIn(f'r="{min(width, height) / 2 - 5}"', svg)
+        self.assertIn(f'cx="{width / 2.0}"', svg)
+        self.assertIn(f'cy="{height / 2.0}"', svg)
+        self.assertIn(f'r="{min(width, height) / 2.0 - 5}"', svg)
 
+    def test_get_initials_from_name_two_words(self):
+        self.assertEqual(get_initials_from_name("John Doe"), "JD")
+        self.assertEqual(get_initials_from_name("  Jane   Smith  "), "JS")
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_get_initials_from_name_one_word(self):
+        self.assertEqual(get_initials_from_name("Single"), "S")
+        self.assertEqual(get_initials_from_name(" another "), "A")
+
+    def test_get_initials_from_name_multiple_words(self):
+        self.assertEqual(get_initials_from_name("Mary Anne Jones"), "MJ")
+        self.assertEqual(get_initials_from_name("Peter van der Beek"), "PB")
+
+    def test_get_initials_from_name_empty_or_whitespace(self):
+        self.assertEqual(get_initials_from_name(""), "N/A")
+        self.assertEqual(get_initials_from_name("   "), "N/A")
+        self.assertEqual(get_initials_from_name(None), "N/A")
+
+    def test_get_initials_from_name_lowercase(self):
+        self.assertEqual(get_initials_from_name("john doe"), "JD")
+        self.assertEqual(get_initials_from_name("single"), "S")

@@ -20,11 +20,11 @@ def generate_svg_circle_with_initials(name, width=120, height=120):
         "#FFE62B",
     ]
     random_color = random.choice(colors)
-    initials = "".join([word[0] for word in name.split()]).upper()
-    return svg_profile_pic(random_color, initials, height, width)
+    initials = get_initials_from_name(name)
+    return _svg_profile_pic(random_color, initials, height, width)
 
 
-def svg_profile_pic(color, initials, height, width):
+def _svg_profile_pic(color, initials, height, width):
     return f"""
     <svg class="profilePic" width="{width}" height="{height}" viewBox="0 0 {width} {height}" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="{width / 2}" cy="{height / 2}" r="{min(width, height) / 2 - 5}" stroke="white" stroke-width="3" fill="{color}"/>
@@ -35,3 +35,15 @@ def svg_profile_pic(color, initials, height, width):
 
 def contact_is_no_user_and_user_not_guest(obj, request):
     return not obj.is_user and request.user.is_authenticated and request.user.username != "guest"
+
+
+def get_initials_from_name(name_string):
+    if not name_string:
+        return "N/A"
+    name_parts = [n for n in name_string.strip().split() if n]
+    if len(name_parts) == 0:
+        return "N/A"
+    elif len(name_parts) == 1:
+        return name_parts[0][0].upper()
+    else:
+        return (name_parts[0][0] + name_parts[-1][0]).upper()
