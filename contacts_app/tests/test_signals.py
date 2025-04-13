@@ -143,3 +143,56 @@ class ContactVisualsSignalTests(TestCase):
 
         expected_error_message = f"Error updating contact visuals for contact {contact_pk}: Simulated initials error"
         mock_logger.assert_called_once_with(expected_error_message, exc_info=True)
+
+    @patch("contacts_app.signals.generate_svg_circle_with_initials")
+    def test_visuals_updated_if_pic_missing(self, mock_generate_svg):
+        post_save.disconnect(update_contact_visuals, sender=Contact)
+        try:
+            self.contact.profile_pic = None
+            self.contact.save(update_fields=["profile_pic"])
+            self.contact.refresh_from_db()
+            self.assertIsNone(
+                self.contact.profile_pic,
+                "Setup failed: profile_pic should be None after saving with signal disconnected.",
+            )
+        finally:
+            post_save.connect(update_contact_visuals, sender=Contact)
+
+        initial_name = self.contact.name
+
+        mock_svg_content = "<svg>Generated</svg>"
+        mock_generate_svg.return_value = mock_svg_content
+
+        with (
+            patch("contacts_app.signals.Contact.objects.get") as mock_get,
+            patch("contacts_app.models.Contact.save") as mock_internal_save,
+        ):
+            self.contact.refresh_from_db()
+            mock_get.return_value = self.contact
+
+            update_contact_visuals(sender=Contact, instance=self.contact, created=False)
+
+            mock_generate_svg.assert_called_once_with(initial_name)
+            self.assertEqual(self.contact.profile_pic, mock_svg_content)
+
+            save_call_with_update_fields = None
+            for call in mock_internal_save.call_args_list:
+                args, kwargs = call
+                if "update_fields" in kwargs:
+                    save_call_with_update_fields = call
+                    break
+
+            self.assertIsNotNone(save_call_with_update_fields, "Signal did not call save with update_fields")
+            args, kwargs = save_call_with_update_fields
+            self.assertEqual(kwargs["update_fields"], ["profile_pic"])
+
+    @patch("contacts_app.signals.logger.warning")
+    @patch("contacts_app.signals.Contact.objects.get")
+    def test_visuals_contact_does_not_exist_logging(self, mock_get, mock_logger_warning):
+        mock_get.side_effect = Contact.DoesNotExist
+        contact_pk = self.contact.pk
+
+        update_contact_visuals(sender=Contact, instance=self.contact, created=False)
+
+        expected_warning = f"Contact {contact_pk} not found when trying to update visuals in post_save signal."
+        mock_logger_warning.assert_called_once_with(expected_warning)
