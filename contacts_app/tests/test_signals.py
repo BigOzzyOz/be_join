@@ -79,6 +79,34 @@ class ContactUserSyncSignalTests(TestCase):
             self.assertNotIn("Deleted user", c_args[0])
         self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
 
+    @patch("contacts_app.signals.logger.warning")
+    @patch("django.contrib.auth.models.User.delete")
+    def test_delete_contact_with_dangling_user_ref_logs_warning(self, mock_user_delete, mock_logger_warning):
+        non_existent_user_id = 99999
+        contact_with_bad_ref = Contact.objects.create(
+            name="Dangling Ref",
+            email="dangling@example.com",
+            is_user=True,
+        )
+        Contact.objects.filter(pk=contact_with_bad_ref.pk).update(user_id=non_existent_user_id)
+
+        contact_with_bad_ref.refresh_from_db()
+        contact_pk = contact_with_bad_ref.pk
+
+        contact_with_bad_ref.delete()
+
+        expected_warning = f"User associated with contact {contact_pk} not found during pre_delete."
+
+        found_warning = False
+        for call in mock_logger_warning.call_args_list:
+            args, kwargs = call
+            if args[0] == expected_warning:
+                found_warning = True
+                break
+        self.assertTrue(found_warning, f"Expected warning '{expected_warning}' not found in logger calls.")
+
+        mock_user_delete.assert_not_called()
+
 
 class ContactVisualsSignalTests(TestCase):
     def setUp(self):
