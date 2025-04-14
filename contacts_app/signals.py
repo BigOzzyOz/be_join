@@ -29,56 +29,41 @@ def create_update_contact_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Contact)
 def update_contact_visuals(sender, instance, created, **kwargs):
-    # Prüfen, ob 'update_fields' übergeben wurde und ob 'name' nicht darin enthalten ist.
-    # Wenn ja, müssen die Visuals nicht neu berechnet werden.
     update_fields = kwargs.get("update_fields")
     if update_fields is not None and "name" not in update_fields:
-        # Wenn update_fields angegeben ist und der Name nicht aktualisiert wurde, überspringe das Visual-Update.
-        # Überspringe auch, wenn profile_pic und first_letters bereits explizit aktualisiert wurden.
         if "profile_pic" not in update_fields and "first_letters" not in update_fields:
-            return  # Nichts zu tun bezüglich der Visuals basierend auf dem Namen
+            return
 
     try:
         orig_first_letters = instance.first_letters
         orig_profile_pic = instance.profile_pic
 
         new_letters = get_initials_from_name(instance.name)
-        new_pic = ""  # Standardmäßig leerer String
+        new_pic = ""
 
         fields_to_update_dict = {}
 
-        # Bedingung 1: Buchstaben haben sich geändert
         if orig_first_letters != new_letters:
             fields_to_update_dict["first_letters"] = new_letters
-            # Bild nur neu generieren, wenn sich die Buchstaben geändert haben
             new_pic = generate_svg_circle_with_initials(instance.name)
             if orig_profile_pic != new_pic:
                 fields_to_update_dict["profile_pic"] = new_pic if new_pic else ""
 
-        # Bedingung 2: Buchstaben gleich, aber Bild fehlt/ist leer
-        # Überprüfe auch, ob 'profile_pic' nicht explizit in update_fields war (um Überschreiben zu vermeiden, falls es gewollt leer gesetzt wurde)
         elif (not orig_profile_pic or orig_profile_pic.isspace()) and (
             update_fields is None or "profile_pic" not in update_fields
         ):
             new_pic = generate_svg_circle_with_initials(instance.name)
-            # Nur aktualisieren, wenn ein nicht-leeres Bild generiert wurde
             if new_pic and not new_pic.isspace():
                 fields_to_update_dict["profile_pic"] = new_pic
 
         if fields_to_update_dict:
-            # Datenbank direkt aktualisieren, ohne erneut Signale auszulösen
-            # Verwende ._base_manager, um Rekursion zu vermeiden
             rows_updated = sender._base_manager.filter(pk=instance.pk).update(**fields_to_update_dict)
 
             if rows_updated > 0:
-                # WICHTIG: Aktualisiere das Instanzobjekt im Speicher, damit der Serializer die Änderungen sieht
                 for field, value in fields_to_update_dict.items():
                     setattr(instance, field, value)
                 logger.info(f"Updated visuals for contact {instance.pk} in post_save signal.")
-            # else: # Optional: Loggen, falls aus irgendeinem Grund keine Zeile aktualisiert wurde
-            #    logger.warning(f"Contact {instance.pk} visuals update query affected 0 rows in post_save.")
 
-    # Contact.DoesNotExist entfernt, da wir nicht erneut fetchen
     except Exception as e:
         logger.error(f"Error updating contact visuals for contact {instance.pk}: {e}", exc_info=True)
 
