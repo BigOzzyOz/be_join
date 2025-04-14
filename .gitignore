@@ -30,3 +30,5 @@ coverage.xml
 # System Files
 .DS_Store
 Thumbs.db
+
+temp/
