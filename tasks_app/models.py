@@ -26,7 +26,7 @@ class Task(models.Model):
     date = models.DateField()
     prio = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default="medium")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="toDo")
-    assigned_to = models.ManyToManyField(Contact, related_name="tasks")
+    assigned_to = models.ManyToManyField(Contact, related_name="tasks", blank=True)
 
     def __str__(self):
         return self.title

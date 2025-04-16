@@ -2,6 +2,12 @@ from django.contrib import admin
 from tasks_app.models import Task, Subtask
 
 
+class SubtaskInline(admin.StackedInline):  # Or admin.StackedInline for a different layout
+    model = Subtask
+    fields = ("text", "status")
+    extra = 1
+
+
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = ("title", "category", "date", "prio", "status")
@@ -9,6 +15,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ("category", "prio", "status", "date")
     filter_horizontal = ("assigned_to",)
     ordering = ("-date",)
+    inlines = [SubtaskInline]
 
 
 @admin.register(Subtask)
