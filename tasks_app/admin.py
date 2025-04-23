@@ -2,7 +2,7 @@ from django.contrib import admin
 from tasks_app.models import Task, Subtask
 
 
-class SubtaskInline(admin.StackedInline):  # Or admin.StackedInline for a different layout
+class SubtaskInline(admin.TabularInline):
     model = Subtask
     fields = ("text", "status")
     extra = 1

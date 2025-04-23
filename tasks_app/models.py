@@ -21,7 +21,7 @@ class Task(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     category = models.CharField(max_length=255, choices=CATEGORY_CHOICES)
     date = models.DateField()
     prio = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default="medium")

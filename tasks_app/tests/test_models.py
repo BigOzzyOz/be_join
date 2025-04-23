@@ -2,6 +2,7 @@ from django.test import TestCase
 from tasks_app.models import Task, Subtask
 from contacts_app.models import Contact
 import datetime
+from django.utils import timezone
 
 
 class TaskModelTest(TestCase):
@@ -53,9 +54,11 @@ class TaskModelEdgeCaseTest(TestCase):
     def test_create_task_without_description(self):
         task = Task.objects.create(
             title="Task Without Description",
-            category="Technical Task",
-            date=datetime.date.today(),
+            category="User Story",
+            date=timezone.now().date(),
             prio="low",
             status="toDo",
         )
-        self.assertEqual(task.description, "")
+        self.assertIsNotNone(task.pk)
+        self.assertEqual(task.title, "Task Without Description")
+        self.assertIsNone(task.description)
