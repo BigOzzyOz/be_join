@@ -95,6 +95,31 @@ curl -H "Authorization: Token <your-token>" http://localhost:8000/api/tasks/
 python manage.py test
 ```
 
+## Demo Data
+
+To create demo contacts and tasks for local testing, run:
+
+```sh
+python manage.py shell
+```
+Then, in the shell:
+```python
+exec(open("seed_demo_data.py", encoding="utf-8").read())
+```
+
+If you encounter issues with the database or want to reset the demo data:
+- Delete all contacts and tasks in the Django admin panel, or run:
+  ```python
+  from contacts_app.models import Contact
+  from tasks_app.models import Task, Subtask
+  Contact.objects.all().delete()
+  Subtask.objects.all().delete()
+  Task.objects.all().delete()
+  ```
+- Then re-run the seed script as above.
+
+This ensures you always have a clean set of demo data for local testing or presentation.
+
 ## License
 MIT License
 

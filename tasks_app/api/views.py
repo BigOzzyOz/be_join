@@ -29,11 +29,20 @@ class SummaryView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         """
-        Return summary statistics for all tasks or 404 if none exist.
+        Return summary statistics for all tasks. If no tasks exist, return zeros for all fields.
         """
         tasks = self.get_queryset()
         if not tasks.exists():
-            return Response({"error": "No tasks found"}, status=status.HTTP_404_NOT_FOUND)
+            data = {
+                "todos": 0,
+                "in_progress": 0,
+                "await_feedback": 0,
+                "done": 0,
+                "total": 0,
+                "urgent": 0,
+                "next_urgent_due": None,
+            }
+            return Response(data, status=status.HTTP_200_OK)
         tasks_date_sort = tasks.order_by("date")
         next_urgent_due = tasks_date_sort.first().date if tasks_date_sort else None
         data = {
