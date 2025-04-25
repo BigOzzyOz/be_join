@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework.authtoken",
+    "drf_yasg",
     "tasks_app",
     "contacts_app",
     "user_auth_app",
