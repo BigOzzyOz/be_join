@@ -206,3 +206,18 @@ class ContactVisualsSignalTests(TestCase):
 
         finally:
             post_save.connect(update_contact_visuals, sender=Contact)
+
+    def test_update_contact_visuals_skips_irrelevant_update_fields(self):
+        from contacts_app.signals import update_contact_visuals
+
+        contact = self.contact
+        contact.first_letters = "XX"
+        contact.profile_pic = "<svg>old</svg>"
+        contact.save()
+        with (
+            patch("contacts_app.signals._get_fields_to_update") as mock_get_fields,
+            patch("contacts_app.signals._update_instance_visuals") as mock_update_instance,
+        ):
+            update_contact_visuals(sender=Contact, instance=contact, created=False, update_fields=["number"])
+            mock_get_fields.assert_not_called()
+            mock_update_instance.assert_not_called()
