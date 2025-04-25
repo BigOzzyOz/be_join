@@ -7,8 +7,15 @@ from contacts_app.utils import generate_svg_circle_with_initials, get_initials_f
 
 logger = logging.getLogger(__name__)
 
+"""
+Signal handlers for synchronizing User and Contact models and updating contact attributes.
+"""
+
 
 def _calculate_contact_attributes(instance):
+    """
+    Calculate contact name, initials, and SVG profile pic from a User instance.
+    """
     full_name = f"{instance.first_name} {instance.last_name}".strip()
     contact_name = full_name if full_name else instance.username
     first_letters = get_initials_from_name(contact_name)
@@ -17,6 +24,9 @@ def _calculate_contact_attributes(instance):
 
 
 def _update_existing_contact(contact, instance, contact_name, first_letters, profile_pic):
+    """
+    Update an existing Contact with new user data and visuals.
+    """
     contact.email = instance.email
     contact.name = contact_name
     contact.first_letters = first_letters
@@ -25,6 +35,9 @@ def _update_existing_contact(contact, instance, contact_name, first_letters, pro
 
 
 def _update_contact_found_by_email(contact, instance, contact_name, first_letters, profile_pic):
+    """
+    Update a Contact found by email with user linkage and visuals.
+    """
     contact.user = instance
     contact.name = contact_name
     contact.first_letters = first_letters
@@ -35,6 +48,9 @@ def _update_contact_found_by_email(contact, instance, contact_name, first_letter
 
 @receiver(post_save, sender=User)
 def create_or_update_contact(sender, instance, created, **kwargs):
+    """
+    Create or update a Contact when a User is created or updated.
+    """
     try:
         name, letters, pic = _calculate_contact_attributes(instance)
         if created:
@@ -46,7 +62,11 @@ def create_or_update_contact(sender, instance, created, **kwargs):
     except Exception as e:
         logger.error(f"Error in signal for user {instance.username}: {e}")
 
+
 def _get_or_create_contact(instance, name, letters, pic):
+    """
+    Get or create a Contact for a User, initializing with user data.
+    """
     return Contact.objects.get_or_create(
         email=instance.email,
         defaults={
@@ -59,7 +79,11 @@ def _get_or_create_contact(instance, name, letters, pic):
         },
     )
 
+
 def _update_contact_if_exists(instance, name, letters, pic):
+    """
+    Update the Contact if it exists for the given User.
+    """
     contact = Contact.objects.filter(user=instance).first()
     if contact:
         _update_existing_contact(contact, instance, name, letters, pic)
@@ -67,6 +91,9 @@ def _update_contact_if_exists(instance, name, letters, pic):
 
 @receiver(pre_delete, sender=User)
 def delete_user_tag_in_contact(sender, instance, **kwargs):
+    """
+    Remove user linkage from Contact when a User is deleted.
+    """
     try:
         updated_count = Contact.objects.filter(user=instance).update(user=None, is_user=False)
         if updated_count == 0:

@@ -1,3 +1,7 @@
+"""
+ViewSets and API views for managing tasks and providing summary statistics.
+"""
+
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import ListAPIView
 from rest_framework import status
@@ -7,15 +11,26 @@ from tasks_app.api.serializers import TaskSerializer
 
 
 class TaskViewSet(ModelViewSet):
+    """
+    API endpoint for listing, creating, retrieving, updating, and deleting tasks.
+    """
+
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
 
 class SummaryView(ListAPIView):
+    """
+    API endpoint for retrieving summary statistics about tasks (counts, next urgent due, etc.).
+    """
+
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
     def get(self, request, *args, **kwargs):
+        """
+        Return summary statistics for all tasks or 404 if none exist.
+        """
         tasks = self.get_queryset()
         if not tasks.exists():
             return Response({"error": "No tasks found"}, status=status.HTTP_404_NOT_FOUND)

@@ -1,1 +1,3 @@
-from django.contrib import admin
+"""
+Admin configuration for the user_auth_app (currently empty).
+"""

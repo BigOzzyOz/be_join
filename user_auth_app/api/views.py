@@ -1,3 +1,7 @@
+"""
+API views for user authentication: login, guest login, registration, and auth status check.
+"""
+
 from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import generics, status
@@ -10,6 +14,10 @@ from user_auth_app.api.mixins import AuthUserResponseMixin
 
 
 class UserLoginView(AuthUserResponseMixin, ObtainAuthToken):
+    """
+    API endpoint for user login. Returns token and user info on success.
+    """
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -25,6 +33,10 @@ class UserLoginView(AuthUserResponseMixin, ObtainAuthToken):
 
 
 class GuestUserView(AuthUserResponseMixin, ObtainAuthToken):
+    """
+    API endpoint for guest login. Returns token and guest user info.
+    """
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -44,6 +56,10 @@ class GuestUserView(AuthUserResponseMixin, ObtainAuthToken):
 
 
 class UserRegistrationView(AuthUserResponseMixin, generics.CreateAPIView):
+    """
+    API endpoint for user registration. Returns token and user info on success.
+    """
+
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
 
@@ -60,6 +76,10 @@ class UserRegistrationView(AuthUserResponseMixin, generics.CreateAPIView):
 
 
 class CheckAuthStatusView(generics.RetrieveAPIView):
+    """
+    API endpoint to check if the current user is authenticated.
+    """
+
     permission_classes = (AllowAny,)
 
     def get(self, request):

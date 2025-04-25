@@ -1,9 +1,17 @@
+"""
+Models for storing tasks and subtasks, including priorities, categories, and assignments.
+"""
+
 from django.db import models
 import uuid
 from contacts_app.models import Contact
 
 
 class Task(models.Model):
+    """
+    Represents a task with title, description, category, date, priority, status, and assigned contacts.
+    """
+
     PRIORITY_CHOICES = [
         ("low", "Low"),
         ("medium", "Medium"),
@@ -29,6 +37,7 @@ class Task(models.Model):
     assigned_to = models.ManyToManyField(Contact, related_name="tasks", blank=True)
 
     def __str__(self):
+        """Return the task's title as string representation."""
         return self.title
 
     class Meta:
@@ -38,6 +47,10 @@ class Task(models.Model):
 
 
 class Subtask(models.Model):
+    """
+    Represents a subtask belonging to a task, with text and status.
+    """
+
     STATUS_CHOICES = [
         ("checked", "Checked"),
         ("unchecked", "Unchecked"),
@@ -49,6 +62,7 @@ class Subtask(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="unchecked")
 
     def __str__(self):
+        """Return the subtask's text as string representation."""
         return self.text
 
     class Meta:

@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Contact)
 def create_update_contact_profile(sender, instance, created, **kwargs):
+    """
+    Update the associated User model when a Contact is updated (email/name sync).
+    """
     try:
         if not created and instance.is_user and instance.user:
             updates = {}
@@ -29,6 +32,9 @@ def create_update_contact_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Contact)
 def update_contact_visuals(sender, instance, created, **kwargs):
+    """
+    Update first_letters and profile_pic for a Contact after save, if needed.
+    """
     update_fields = kwargs.get("update_fields")
     if update_fields is not None and "name" not in update_fields:
         if "profile_pic" not in update_fields and "first_letters" not in update_fields:
@@ -40,7 +46,11 @@ def update_contact_visuals(sender, instance, created, **kwargs):
     except Exception as e:
         _log_update_visuals_error(instance, e)
 
+
 def _get_fields_to_update(instance, update_fields):
+    """
+    Determine which fields (first_letters, profile_pic) need to be updated for a Contact.
+    """
     orig_first_letters = instance.first_letters
     orig_profile_pic = instance.profile_pic
     new_letters = get_initials_from_name(instance.name)
@@ -59,19 +69,30 @@ def _get_fields_to_update(instance, update_fields):
             fields_to_update_dict["profile_pic"] = new_pic
     return fields_to_update_dict
 
+
 def _update_instance_visuals(sender, instance, fields_to_update_dict):
+    """
+    Update the Contact instance in the database and set attributes in memory.
+    """
     rows_updated = sender._base_manager.filter(pk=instance.pk).update(**fields_to_update_dict)
     if rows_updated > 0:
         for field, value in fields_to_update_dict.items():
             setattr(instance, field, value)
         logger.info(f"Updated visuals for contact {instance.pk} in post_save signal.")
 
+
 def _log_update_visuals_error(instance, e):
+    """
+    Log errors that occur during contact visuals update.
+    """
     logger.error(f"Error updating contact visuals for contact {instance.pk}: {e}", exc_info=True)
 
 
 @receiver(pre_delete, sender=Contact)
 def delete_associated_user(sender, instance, **kwargs):
+    """
+    Delete the associated User when a Contact is deleted, if applicable.
+    """
     try:
         if instance.is_user and instance.user:
             user_to_delete = instance.user
