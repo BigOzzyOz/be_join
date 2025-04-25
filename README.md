@@ -31,19 +31,26 @@ A Django-based backend for managing tasks, contacts, and user authentication. Th
    python -m venv env
    env\Scripts\activate  # On Windows
    ```
-3. **Install dependencies:**
+3. **Copy the example.env file:**
+   ```sh
+   copy example.env .env  # On Windows
+   # or
+   cp example.env .env    # On Linux/Mac
+   ```
+   Edit the `.env` file and set your own values for SECRET_KEY, database credentials, etc.
+4. **Install dependencies:**
    ```sh
    pip install -r requirements.txt
    ```
-4. **Apply migrations:**
+5. **Apply migrations:**
    ```sh
    python manage.py migrate
    ```
-5. **Create a superuser (optional, for admin access):**
+6. **Create a superuser (optional, for admin access):**
    ```sh
    python manage.py createsuperuser
    ```
-6. **Run the development server:**
+7. **Run the development server:**
    ```sh
    python manage.py runserver
    ```
@@ -118,10 +125,43 @@ If you encounter issues with the database or want to reset the demo data:
   ```
 - Then re-run the seed script as above.
 
+**Note:** Before running demo data scripts, make sure you have copied `example.env` to `.env` and adjusted the values for your environment.
+
 This ensures you always have a clean set of demo data for local testing or presentation.
 
 ## License
 MIT License
 
+## Deployment (Production)
+
+For production deployment (e.g., on a vServer), follow these steps:
+
+1. **Create a .env file:**
+   - Place a `.env` file in the project root (see `.example.env`).
+   - Make sure the `SECRET_KEY` is in quotes if it contains special characters like `#`.
+   - Set `DEBUG=False` and adjust `ALLOWED_HOSTS` for your domain.
+2. **Install dependencies:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+3. **Apply migrations:**
+   ```sh
+   python manage.py migrate
+   ```
+4. **Collect static files:**
+   ```sh
+   python manage.py collectstatic
+   ```
+5. **Start the server with Gunicorn (example):**
+   ```sh
+   gunicorn backend_join.wsgi:application
+   ```
+   (Alternatively: use uWSGI or another WSGI server)
+
+**Notes:**
+- The `.env` file should not be committed to version control (see `.gitignore`).
+- Adjust database settings in `.env` for your environment.
+- For local development, you can still use `python manage.py runserver`.
+
 ---
-*Last updated: April 25, 2025*
+*Deployment section added on April 26, 2025*

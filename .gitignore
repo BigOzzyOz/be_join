@@ -8,12 +8,14 @@ __pycache__/
 # Django
 *.log
 db.sqlite3
+staticfiles/
 /media/
 *.pot
 
 # Virtual Environment
 venv/
 env/
+.env*
 
 # Covarage
 coverage/
@@ -30,5 +32,3 @@ coverage.xml
 # System Files
 .DS_Store
 Thumbs.db
-
-temp/
