@@ -6,31 +6,25 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from user_auth_app.api.serializers import RegisterSerializer
-from contacts_app.models import Contact
+from user_auth_app.api.mixins import AuthUserResponseMixin
 
 
-class UserLoginView(ObtainAuthToken):
+class UserLoginView(AuthUserResponseMixin, ObtainAuthToken):
     permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        data = {}
-
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             token, created = Token.objects.get_or_create(user=user)
-            data["name"] = f"{user.first_name} {user.last_name}"
-            data["username"] = user.username
-            data["email"] = user.email
-            data["token"] = token.key
-            data["id"] = Contact.objects.get(user=user).id
+            data = self._build_user_response(user, token)
         else:
             data = serializer.errors
         status_code = status.HTTP_201_CREATED if serializer.is_valid() else status.HTTP_400_BAD_REQUEST
         return Response(data, status=status_code)
 
 
-class GuestUserView(ObtainAuthToken):
+class GuestUserView(AuthUserResponseMixin, ObtainAuthToken):
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -44,33 +38,21 @@ class GuestUserView(ObtainAuthToken):
                 guest_user.save()
             token, created_token = Token.objects.get_or_create(user=guest_user)
 
-        data = {
-            "username": guest_user.username,
-            "email": guest_user.email,
-            "token": token.key,
-            "id": Contact.objects.get(user=guest_user).id,
-        }
+        data = self._build_user_response(guest_user, token, include_name=False)
         status_code = status.HTTP_201_CREATED if created_user or created_token else status.HTTP_200_OK
         return Response(data, status=status_code)
 
 
-class UserRegistrationView(generics.CreateAPIView):
+class UserRegistrationView(AuthUserResponseMixin, generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        data = {}
         if serializer.is_valid():
             user = serializer.save()
             token, created = Token.objects.get_or_create(user=user)
-            data = {
-                "username": user.username,
-                "email": user.email,
-                "token": token.key,
-                "name": f"{user.first_name} {user.last_name}",
-                "id": Contact.objects.get(user=user).id,
-            }
+            data = self._build_user_response(user, token)
         else:
             data = serializer.errors
         status_code = status.HTTP_201_CREATED if serializer.is_valid() else status.HTTP_400_BAD_REQUEST
