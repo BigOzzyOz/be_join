@@ -57,16 +57,26 @@ class TaskSerializer(serializers.ModelSerializer):
         for subtask_data in subtasks_data:
             subtask_id = subtask_data.get("id")
             if subtask_id:
-                subtask_instance = Subtask.objects.get(id=subtask_id)
-                subtask_instance.text = subtask_data.get("text", subtask_instance.text)
-                subtask_instance.status = subtask_data.get("status", subtask_instance.status)
-                subtask_instance.save()
-                new_subtask_ids.add(subtask_id)
+                new_subtask_ids.add(self.update_existing_subtask(subtask_id, subtask_data))
             else:
-                new_subtask = Subtask.objects.create(task=instance, **subtask_data)
-                new_subtask_ids.add(new_subtask.id)
+                new_subtask_ids.add(self.create_new_subtask(instance, subtask_data))
 
-        for subtask_id in existing_subtask_ids - new_subtask_ids:
+        removed_subtask_ids = existing_subtask_ids - new_subtask_ids
+        self.delete_removed_subtasks(removed_subtask_ids)
+
+    def update_existing_subtask(self, subtask_id, subtask_data):
+        subtask_instance = Subtask.objects.get(id=subtask_id)
+        subtask_instance.text = subtask_data.get("text", subtask_instance.text)
+        subtask_instance.status = subtask_data.get("status", subtask_instance.status)
+        subtask_instance.save()
+        return subtask_id
+
+    def create_new_subtask(self, instance, subtask_data):
+        new_subtask = Subtask.objects.create(task=instance, **subtask_data)
+        return new_subtask.id
+
+    def delete_removed_subtasks(self, removed_subtask_ids):
+        for subtask_id in removed_subtask_ids:
             Subtask.objects.get(id=subtask_id).delete()
 
     def handle_assigned_to(self, instance, assigned_to_data):
