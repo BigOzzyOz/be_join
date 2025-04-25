@@ -155,8 +155,18 @@ class SummaryViewTest(APITestCase):
     def test_summary_view_no_tasks(self):
         Task.objects.all().delete()
         response = self.client.get("/api/tasks/summary/")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, {"error": "No tasks found"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_data = {
+            "todos": 0,
+            "in_progress": 0,
+            "await_feedback": 0,
+            "done": 0,
+            "total": 0,
+            "urgent": 0,
+            "next_urgent_due": None,
+        }
+        self.assertEqual(response.data, expected_data)
 
     def test_summary_view_method_not_allowed(self):
         response = self.client.post("/api/tasks/summary/")
