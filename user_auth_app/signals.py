@@ -38,25 +38,31 @@ def create_or_update_contact(sender, instance, created, **kwargs):
     try:
         name, letters, pic = _calculate_contact_attributes(instance)
         if created:
-            contact, was_created = Contact.objects.get_or_create(
-                email=instance.email,
-                defaults={
-                    "name": name,
-                    "number": "Please add your number",
-                    "first_letters": letters,
-                    "profile_pic": pic,
-                    "is_user": True,
-                    "user": instance,
-                },
-            )
+            contact, was_created = _get_or_create_contact(instance, name, letters, pic)
             if not was_created:
                 _update_contact_found_by_email(contact, instance, name, letters, pic)
         else:
-            contact = Contact.objects.filter(user=instance).first()
-            if contact:
-                _update_existing_contact(contact, instance, name, letters, pic)
+            _update_contact_if_exists(instance, name, letters, pic)
     except Exception as e:
         logger.error(f"Error in signal for user {instance.username}: {e}")
+
+def _get_or_create_contact(instance, name, letters, pic):
+    return Contact.objects.get_or_create(
+        email=instance.email,
+        defaults={
+            "name": name,
+            "number": "Please add your number",
+            "first_letters": letters,
+            "profile_pic": pic,
+            "is_user": True,
+            "user": instance,
+        },
+    )
+
+def _update_contact_if_exists(instance, name, letters, pic):
+    contact = Contact.objects.filter(user=instance).first()
+    if contact:
+        _update_existing_contact(contact, instance, name, letters, pic)
 
 
 @receiver(pre_delete, sender=User)
