@@ -196,3 +196,5 @@ LOGGING = {
         },
     },
 }
+
+FORCE_SCRIPT_NAME = "/be-join"
