@@ -197,4 +197,7 @@ LOGGING = {
     },
 }
 
-FORCE_SCRIPT_NAME = "/be-join"
+if "test" in sys.argv:
+    FORCE_SCRIPT_NAME = None
+else:
+    FORCE_SCRIPT_NAME = "/be-join"
