@@ -15,21 +15,20 @@ import sys
 import os
 import environ
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Set up environment variables
 BASE_DIR = Path(__file__).resolve().parent.parent
+env = environ.Env(DEBUG=(bool, True))
 
+# Load .env file (automatisch: .env, .env.development, .env.production, falls vorhanden)
+environ.Env.read_env(env_file=env.str("DJANGO_ENV_FILE", default=str(BASE_DIR / ".env")))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# .env einbinden
-env = environ.Env(DEBUG=(bool, False))
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
-
-# SECRET_KEY, DEBUG, ALLOWED_HOSTS aus .env
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
+
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 
 # Application definition
@@ -84,6 +83,9 @@ WSGI_APPLICATION = "backend_join.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+
+DATABASES = {"default": env.db(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")}
+
 if "test" in sys.argv:
     DATABASES = {
         "default": {
@@ -91,7 +93,7 @@ if "test" in sys.argv:
             "NAME": ":memory:",
         }
     }
-elif env("DJANGO_MYSQL_LOCAL"):
+elif env("DJANGO_ENV"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
@@ -99,17 +101,6 @@ elif env("DJANGO_MYSQL_LOCAL"):
             "USER": env("DB_USER"),
             "PASSWORD": env("DB_PASSWORD"),
             "HOST": env("DB_HOST"),
-            "PORT": env("DB_PORT"),
-        }
-    }
-elif env("DJANGO_PRODUCTION"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": env("DB_NAME"),
-            "USER": env("DB_USER"),
-            "PASSWORD": env("DB_PASSWORD"),
-            "HOST": "localhost",
             "PORT": env("DB_PORT"),
         }
     }
@@ -156,11 +147,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = env("STATIC_URL", default="/static/")
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = env("MEDIA_URL", default="/media/")
+MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -175,8 +166,6 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
-
-CORS_ALLOW_ALL_ORIGINS = True
 
 LOGGING = {
     "version": 1,
@@ -197,7 +186,15 @@ LOGGING = {
     },
 }
 
-if "test" in sys.argv:
-    FORCE_SCRIPT_NAME = None
-else:
-    FORCE_SCRIPT_NAME = "/be-join"
+# Script name prefix for reverse proxy deployments (e.g. /be-coderr or /be-join)
+FORCE_SCRIPT_NAME = env("FORCE_SCRIPT_NAME", default=None)
+
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ],
+)
+
+CORS_ALLOW_CREDENTIALS = True
