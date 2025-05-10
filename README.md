@@ -1,6 +1,6 @@
 # Backend Join
 
-A Django-based backend for managing tasks, contacts, and user authentication. This project provides a REST API for a task management application, including user registration, login, and contact management.
+A Django-based backend for managing tasks, contacts, and user authentication. This project provides a REST API for a task management application, designed to work with its corresponding [Join Frontend application](https://github.com/BigOzzyOz/join). It includes user registration, login, and contact management.
 
 ## Features
 - User authentication (registration, login, guest login)
@@ -10,8 +10,9 @@ A Django-based backend for managing tasks, contacts, and user authentication. Th
 - Admin interface for managing all data
 - Comprehensive test suite
 
-## Repository
-[https://github.com/BigOzzyOz/be_join](https://github.com/BigOzzyOz/be_join)
+## Repositories
+- **Backend (this project):** [https://github.com/BigOzzyOz/be_join](https://github.com/BigOzzyOz/be_join)
+- **Frontend:** [https://github.com/BigOzzyOz/join](https://github.com/BigOzzyOz/join)
 
 ## Requirements
 - Python 3.10+
@@ -54,6 +55,13 @@ A Django-based backend for managing tasks, contacts, and user authentication. Th
    ```sh
    python manage.py runserver
    ```
+
+## Frontend Application
+
+This backend is designed to be used with the Join frontend application. You can find the frontend project and its setup instructions here:
+- **Frontend Repository:** [https://github.com/BigOzzyOz/join](https://github.com/BigOzzyOz/join)
+
+Make sure the frontend is configured to communicate with the API endpoints provided by this backend.
 
 ## Project Structure
 - `backend_join/` – Django project settings and URLs
